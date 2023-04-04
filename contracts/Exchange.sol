@@ -19,4 +19,9 @@ contract Exchange{
     function getReserve() public view returns(uint256){
         return IERC20(tokenAddress).balanceOf(address(this));
     }
+
+    function getReserveEth() public view returns(uint256){
+        return address(this).balance;
+    }
+
 }
