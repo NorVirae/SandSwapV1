@@ -20,8 +20,10 @@ contract Exchange{
         return IERC20(tokenAddress).balanceOf(address(this));
     }
 
-    function getReserveEth() public view returns(uint256){
-        return address(this).balance;
+    function getPrice(uint256 inputReserve, uint256 outputReserve) public pure returns(uint256){
+        require(inputReserve > 0 && outputReserve > 0, "invalid reserve");
+
+        return (inputReserve * 1000) / outputReserve;
     }
 
 }

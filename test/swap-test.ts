@@ -4,6 +4,7 @@ import { expect } from "chai";
 
 describe("Add llquidity", () => {
   let tokenContract: any, exchangeContract: any;
+  const provider = ethers.provider;
   beforeEach(async () => {
     let tokenFactory = await ethers.getContractFactory("SandToken");
     tokenContract = await tokenFactory.deploy(
@@ -14,20 +15,37 @@ describe("Add llquidity", () => {
 
     let exchangefactory = await ethers.getContractFactory("Exchange");
     exchangeContract = await exchangefactory.deploy(tokenContract.address);
+    await tokenContract.approve(
+      exchangeContract.address,
+      ethers.utils.parseUnits("2000", 18)
+    );
+    await exchangeContract.addLiquidity(ethers.utils.parseUnits("2000", 18), {
+      value: ethers.utils.parseUnits("1000", 18),
+    });
   });
 
   it("adds Liquidity", async () => {
-    await tokenContract.approve(
-      exchangeContract.address,
-      ethers.utils.parseUnits("200", 18)
-    );
-    await exchangeContract.addLiquidity(ethers.utils.parseUnits("200", 18), {
-      value: ethers.utils.parseUnits("200", 18),
-    });
-
+    
     let exchangeBalance = await exchangeContract.getReserve();
-    let etherBalance = await exchangeContract.getReserveEth()
-    expect(Number(ethers.utils.formatUnits(exchangeBalance, 18))).equal(200)
-    expect(Number(ethers.utils.formatUnits(etherBalance, 18))).equal(200)
+    expect(Number(ethers.utils.formatUnits(exchangeBalance, 18))).equal(2000);
+    expect(
+      Number(
+        ethers.utils.formatUnits(
+          await provider.getBalance(exchangeContract.address),
+          18
+        )
+      )
+    ).equal(1000);
+  });
+
+  it("should return correct price", async () => {
+    let ethReserve = await provider.getBalance(exchangeContract.address);
+    let sandReserve = await exchangeContract.getReserve();
+    console.log(ethReserve, sandReserve);
+    let tokenOutPrice = await exchangeContract.getPrice(
+        ethReserve,
+        sandReserve);
+
+    expect(Number(tokenOutPrice.toString())).equal(500);
   });
 });
